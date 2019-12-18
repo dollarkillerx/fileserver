@@ -8,6 +8,7 @@ package main
 
 import (
 	"fileserver/router"
+	"fileserver/server"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -15,8 +16,13 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 2 {
+	if len(os.Args) <= 2 {
 		log.Fatalln("请输入运行地址 比如 ./main 0.0.0.0:8081")
+	}
+
+	// 如果用户指定了路径
+	if len(os.Args) == 3 {
+		server.FileDir = os.Args[2]
 	}
 
 	app := gin.New() // 最小核心启动

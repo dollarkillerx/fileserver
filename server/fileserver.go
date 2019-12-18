@@ -13,19 +13,23 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 )
+
+var FileDir = ""
 
 func UploadFile(ctx *gin.Context) {
 	dir := ctx.Param("dir")
 	file := ctx.Param("file")
-	err := utils.DirPing(dir)
+	dirpath := filepath.Join(FileDir, dir)
+	err := utils.DirPing(dirpath)
 	if err != nil {
 		log.Println(err)
 		def.Return(ctx, def.Err500)
 		return
 	}
 	defer ctx.Request.Body.Close()
-	filename := dir + "/" + file
+	filename := filepath.Join(FileDir, dir, file)
 	open, err := os.Create(filename)
 	if err != nil {
 		log.Println(err)
@@ -44,7 +48,7 @@ func UploadFile(ctx *gin.Context) {
 func DownloadFile(ctx *gin.Context) {
 	dir := ctx.Param("dir")
 	file := ctx.Param("file")
-	filename := dir + "/" + file
+	filename := filepath.Join(FileDir, dir, file)
 	open, e := os.Open(filename)
 	if e != nil {
 		log.Println(e)
