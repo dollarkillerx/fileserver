@@ -21,6 +21,8 @@ func main() {
 
 	app := gin.New() // 最小核心启动
 
+	app.MaxMultipartMemory = 1024 << 20 // 1024M
+
 	app.Use(gin.Recovery()) // 注册recovery中间件防止panic
 
 	router.Registered(app)

@@ -10,7 +10,9 @@ import (
 	"fileserver/def"
 	"fileserver/utils"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
+	"io"
+	"log"
+	"os"
 )
 
 func UploadFile(ctx *gin.Context) {
@@ -18,18 +20,21 @@ func UploadFile(ctx *gin.Context) {
 	file := ctx.Param("file")
 	err := utils.DirPing(dir)
 	if err != nil {
+		log.Println(err)
 		def.Return(ctx, def.Err500)
 		return
 	}
 	defer ctx.Request.Body.Close()
-	bytes, err := ioutil.ReadAll(ctx.Request.Body)
+	filename := dir + "/" + file
+	open, err := os.Create(filename)
 	if err != nil {
+		log.Println(err)
 		def.Return(ctx, def.Err500)
 		return
 	}
-	filename := dir + "/" + file
-	err = ioutil.WriteFile(filename, bytes, 00666)
+	_, err = io.Copy(open, ctx.Request.Body)
 	if err != nil {
+		log.Println(err)
 		def.Return(ctx, def.Err500)
 		return
 	}
@@ -40,8 +45,9 @@ func DownloadFile(ctx *gin.Context) {
 	dir := ctx.Param("dir")
 	file := ctx.Param("file")
 	filename := dir + "/" + file
-	bytes, e := ioutil.ReadFile(filename)
+	open, e := os.Open(filename)
 	if e != nil {
+		log.Println(e)
 		def.Return(ctx, def.No404)
 		return
 	}
@@ -49,5 +55,9 @@ func DownloadFile(ctx *gin.Context) {
 	ctx.Header("Content-Type", "application/octet-stream")
 	ctx.Header("Content-Disposition", "attachment; filename="+file)
 	ctx.Header("Content-Transfer-Encoding", "binary")
-	ctx.Writer.Write(bytes)
+	_, e = io.Copy(ctx.Writer, open)
+	if e != nil {
+		log.Println(e)
+		def.Return(ctx, def.Err500)
+	}
 }
